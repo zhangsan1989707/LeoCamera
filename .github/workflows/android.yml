@@ -6,6 +6,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,20 +25,15 @@ jobs:
       - name: Decode Keystore
         env:
           ENCODED_KEYSTORE: ${{ secrets.ENCODED_KEYSTORE }}
+        run: echo "$ENCODED_KEYSTORE" | base64 -d > app/keystore.p12
+
+      - name: Verify Keystore File
         run: |
-          echo "$ENCODED_KEYSTORE" | base64 -di > app/keystore.jks
+          ls -l app/keystore.p12
+          file app/keystore.p12
       
-      # 修复后的签名步骤
       - name: Build Signed APK
-        run: |
-          ./gradlew assembleRelease \
-            -PstoreFile='app/keystore.p12' \
-            -PstorePassword=${{ secrets.KEYSTORE_PASSWORD }} \
-            -PkeyAlias=${{ secrets.KEY_ALIAS }} \
-            -PkeyPassword=${{ secrets.KEY_PASSWORD }}
-          
-          # 验证文件已签名
-          ls -l app/build/outputs/apk/release/*.apk
+        run: ./gradlew assembleRelease
       
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
