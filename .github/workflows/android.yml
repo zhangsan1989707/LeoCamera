@@ -44,3 +44,4 @@ jobs:
         with:
           name: signed-app-release
           path: app/build/outputs/apk/release/*.apk
+          retention-days: 1  # 添加缓存清理时间
