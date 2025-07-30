@@ -6,12 +6,13 @@ android {
     compileSdkVersion 31
     buildToolsVersion "31.0.0"
     
-    signingConfigs {
+     signingConfigs {
     release {
-      storeFile file("keystore.jks") 
-      storePassword "Abcd.1234@"       
+      storeFile file("app/keystore.p12") 
+      storePassword System.getenv("KEYSTORE_PASSWORD")
       keyAlias "my_key_alias"
-      keyPassword "Abcd.1234@"
+      keyPassword System.getenv("KEY_PASSWORD")
+      storeType "PKCS12"
     }
   }
 
