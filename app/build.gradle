@@ -8,7 +8,10 @@ android {
     
     signingConfigs {
         release {
-            storeFile file("leocamera.jks")  // 此处路径需一致
+            storeFile = file(System.getenv("STORE_FILE") ?: "debug.keystore")
+            storePassword = System.getenv("STORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
         }
     }
 
@@ -26,6 +29,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     repositories{
