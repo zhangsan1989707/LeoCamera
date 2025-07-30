@@ -8,10 +8,7 @@ android {
     
     signingConfigs {
         release {
-            storeFile = file(System.getenv("STORE_FILE") ?: "debug.keystore")
-            storePassword = System.getenv("STORE_PASSWORD") ?: "android"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
+            storeFile file("keystore.jks")
         }
     }
 
