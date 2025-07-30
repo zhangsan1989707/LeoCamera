@@ -5,6 +5,12 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 31
     buildToolsVersion "31.0.0"
+    
+    signingConfigs {
+        release {
+            storeFile file("leocamera.jks")  // 此处路径需一致
+        }
+    }
 
     defaultConfig {
         applicationId "com.yy.perfectfloatwindow"
