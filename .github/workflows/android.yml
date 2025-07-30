@@ -1,8 +1,7 @@
-name: Build APK
+name: Build Signed APK
 on: 
   push:
-    branches: [ main ]  # 推送到 main 分支时触发
-    tags: [ 'v*' ]      # 或推送版本标签（如 v1.0）时触发
+    branches: [ main ]
 
 jobs:
   build:
@@ -13,31 +12,35 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. 设置 JDK 环境
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: '17'
+          distribution: 'temurin'
 
       # 3. 授予 Gradle 执行权限
-      - name: Grant Gradle permission
-        run: chmod +x ./gradlew
+      - name: Make gradlew executable
+        run: chmod +x gradlew
 
-      # 4. 构建 Release APK
-      - name: Build APK
+      # 4. ⭐ 密钥还原步骤（核心操作）
+      - name: Decode Keystore
+        env:
+          ENCODED_KEYSTORE: ${{ secrets.ENCODED_KEYSTORE }}  # Base64 编码的密钥内容
+        run: |
+          echo "$ENCODED_KEYSTORE" | base64 -di > app/keystore.jks  # 解码并输出到文件
+          ls -la app/keystore.jks  # 验证文件生成（调试用）
+
+      # 5. 构建签名 APK
+      - name: Build Release APK
+        env:
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      # 5. 上传 APK 到 Artifacts（供手动下载）
-      - name: Upload APK
+      # 6. 上传 APK 产物
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: app-release
-          path: app/build/outputs/apk/release/app-release.apk
-
-      # 6. 发布到 GitHub Releases（可选）
-      - name: Release APK
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')  # 仅标签触发时发布
-        with:
-          files: app/build/outputs/apk/release/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 自动使用内置 token
+          name: signed-app-release
+          path: app/build/outputs/apk/release/*.apk
