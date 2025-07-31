@@ -52,5 +52,5 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation project(path: ':floatserver')
-    classpath 'com.android.tools.build:gradle:7.4.2' // 最低需 ≥7.4.2
+    classpath 'com.android.tools.build:gradle:8.2.0' // 最低需 ≥7.4.2
 }
