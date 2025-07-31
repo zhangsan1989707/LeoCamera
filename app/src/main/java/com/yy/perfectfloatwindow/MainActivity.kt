@@ -44,10 +44,10 @@ class MainActivity : AppCompatActivity() {
 
     // Android 13+ 权限适配
     private fun getRequiredPermissions(): Array<String> {
-        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        return if (android.os.Build.VERSION.SDK_INT >= 33) {
             arrayOf(
                 Manifest.permission.CAMERA,
-                Manifest.permission.READ_MEDIA_IMAGES
+                "android.permission.READ_MEDIA_IMAGES"
             )
         } else {
             arrayOf(
