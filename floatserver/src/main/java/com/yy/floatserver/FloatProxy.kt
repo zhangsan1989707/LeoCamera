@@ -1,5 +1,6 @@
 package com.yy.floatserver
 
+import com.yy.floatserver.FloatManager
 
 /**
  * Created by yy on 2020/6/13.
