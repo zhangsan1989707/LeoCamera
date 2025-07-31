@@ -1,5 +1,3 @@
-
-
 import android.app.AlertDialog
 import android.app.Service
 import android.content.ComponentName
@@ -9,6 +7,9 @@ import android.os.CountDownTimer
 import android.os.IBinder
 import android.widget.ImageView
 import android.widget.Toast
+import com.yy.floatserver.FloatClient
+import com.yy.floatserver.IFloatWindowHandler
+import com.yy.floatserver.R
 import com.yy.floatserver.server.FloatingServer
 import com.yy.floatserver.utils.SettingsCompat
 
