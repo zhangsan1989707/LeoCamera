@@ -27,6 +27,10 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         arguments: assembleRelease  # 执行Gradle的release构建任务
+    - name: Verify Keystore Alias
+      run: |
+        echo "${{ secrets.SIGNING_KEY }}" | base64 -d > temp.jks
+        keytool -list -v -keystore temp.jks -storepass "${{ secrets.KEY_STORE_PASSWORD }}"
 
     # 4. 签名APK（使用Secrets中的密钥）
     - name: Sign APK
