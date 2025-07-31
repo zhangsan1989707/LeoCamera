@@ -1,14 +1,4 @@
-if (android.os.Build.VERSION.SDK_INT >= 33) {
-    arrayOf(
-        Manifest.permission.CAMERA,
-        "android.permission.READ_MEDIA_IMAGES"
-    )
-} else {
-    arrayOf(
-        Manifest.permission.CAMERA,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
-    )
-}package com.yy.floatserver
+
 
 import android.app.AlertDialog
 import android.app.Service
