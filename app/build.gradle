@@ -16,6 +16,17 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+     // 1. 先定义签名配置
+    signingConfigs {
+        release { // 名称必须与buildTypes中引用的完全一致
+            storeFile file("my-release-key.jks") // 替换为实际路径
+            storePassword "123456"
+            keyAlias "my_key_alias"
+            keyPassword "123456"
+        }
+    }
+
+    // 2. 再配置构建类型
     buildTypes {
         release {
             minifyEnabled false
