@@ -79,19 +79,12 @@ jobs:
     #     generateReleaseNotes: true
 
     
-    # - name: Upload APK Artifact
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: signed-app-release
-    #     path: app/build/outputs/apk/release/*.apk
-    #     retention-days: 1
-
-
-    # GitHub Actions 示例
-    - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
       with:
-        tag_name: v1.0-${{ github.run_id }}  # 添加唯一后缀
-        release_name: Release v1.0 (Build ${{ github.run_id }})
+        name: signed-app-release
+        path: app/build/outputs/apk/release/*.apk
+        retention-days: 1
+
+
+
