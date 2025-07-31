@@ -1,14 +1,15 @@
-name: Build and Release APK
+name: Build, Sign and Release APK
 
 on:
   push:
-    branches: [ 'release*' ]
+    branches: [ 'release*' ]  # 仅对 release 分支触发
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write  # 允许上传产物
+      releases: write  # 关键：添加 Release 创建权限 [6](@ref)
 
     steps:
     # 1. 拉取代码
@@ -22,30 +23,25 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    # 3. 显式安装 Android Build-Tools 34.0.0（修复 zipalign 缺失问题）
+    # 3. 安装 Android Build-Tools
     - name: Install Android Build-Tools
       uses: android-actions/setup-android@v2
       with:
-        build-tools: 34.0.0  # 兼容 AGP 8.0+ 且避免旧版不预装问题 [3,10](@ref)
+        build-tools: 34.0.0  # 确保 zipalign 可用 [1](@ref)
 
-    # 4. 验证环境工具链（调试用）
-    - name: Verify Build-Tools Path
-      run: ls /usr/local/lib/android/sdk/build-tools  # 确认 34.0.0 存在
-
-    # 5. 构建 APK
+    # 4. 构建 APK
     - name: Build Release APK
       uses: gradle/gradle-build-action@v2
       with:
         arguments: assembleRelease
 
-    # 6. 验证密钥别名（修复语法错误）
+    # 5. 验证密钥别名
     - name: Verify Keystore Alias
       run: |
         echo "${{ secrets.SIGNING_KEY }}" | base64 -d > temp.jks
-        # 删除多余花括号，严格匹配别名
-        keytool -list -v -keystore temp.jks -storepass "${{ secrets.KEY_STORE_PASSWORD }}" 
+        keytool -list -v -keystore temp.jks -storepass "${{ secrets.KEY_STORE_PASSWORD }}"
 
-    # 7. 签名 APK（指定 Build-Tools 版本）
+    # 6. 签名 APK
     - name: Sign APK
       uses: r0adkll/sign-android-release@v1
       id: sign_app
@@ -56,42 +52,34 @@ jobs:
         keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
         keyPassword: ${{ secrets.KEY_PASSWORD }}
       env:
-        # 显式覆盖默认版本，确保使用已安装的 34.0.0 [3](@ref)
-        BUILD_TOOLS_VERSION: "34.0.0"  
+        BUILD_TOOLS_VERSION: "34.0.0"  # 显式指定版本
 
-    # 8. 重命名 APK
+    # 7. 重命名 APK（添加唯一后缀避免冲突）
     - name: Rename APK
       run: |
         mv "${{ steps.sign_app.outputs.signedReleaseFile }}" \
-        myapp_$GITHUB_REF_NAME.apk
+        myapp_${{ github.run_id }}.apk  # 使用 run_id 确保唯一性
 
-    # 9. 清理临时密钥（安全加固）
+    # 8. 清理临时密钥
     - name: Cleanup Keystore
-      run: rm -f temp.jks  # 防止密钥残留 [1](@ref)
+      run: rm -f temp.jks
 
-    # # 10. 发布到 GitHub Releases
-    # - name: Create Release
-    #   uses: ncipollo/release-action@v1
-    #   with:
-    #     artifacts: '*.apk'
-    #     token: ${{ github.token }}
-    #     tag: ${{ github.ref_name }}
-    #     generateReleaseNotes: true
+    # 9. 创建 GitHub Release（带冲突检测）
+    - name: Check if release tag exists
+      id: check_release
+      run: |
+        if git ls-remote --tags origin | grep -q "refs/tags/v1.0-${{ github.run_id }}"; then
+          echo "release_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "release_exists=false" >> $GITHUB_OUTPUT
+        fi
 
-    
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
+    - name: Create Release
+      if: steps.check_release.outputs.release_exists == 'false'
+      uses: softprops/action-gh-release@v1  # 更稳定的 Release 工具 [6](@ref)
       with:
-        name: signed-app-release
-        path: app/build/outputs/apk/release/*.apk
-        retention-days: 1
-
-
-    # # GitHub Actions 示例
-    # - name: Create Release
-    #   uses: actions/create-release@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   with:
-    #     tag_name: v1.0-${{ github.run_id }}  # 添加唯一后缀
-    #     release_name: Release v1.0 (Build ${{ github.run_id }})
+        tag_name: v1.0-${{ github.run_id }}  # 唯一标签
+        name: Release v1.0 (Build ${{ github.run_id }})
+        body: "Automated release from GitHub Actions"
+        files: myapp_*.apk
+        token: ${{ secrets.GITHUB_TOKEN }}
