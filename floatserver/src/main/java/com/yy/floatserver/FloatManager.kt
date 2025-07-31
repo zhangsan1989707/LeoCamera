@@ -62,12 +62,37 @@ class FloatManager(private val builder: FloatClient.Builder) : IFloatWindowHandl
     private fun showFloatWindow() {
         var view = builder.view
         if (view == null) {
-            var imageView = ImageView(builder.context)
+            val imageView = ImageView(builder.context)
             imageView.setImageResource(R.mipmap.ic_launcher_round)
             view = imageView
         }
+
+        // 添加双击监听
+        val gestureDetector = android.view.GestureDetector(builder.context, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: android.view.MotionEvent?): Boolean {
+                // 触发拍照逻辑
+                takePhoto()
+                return true
+            }
+        })
+        view.setOnTouchListener { v, event ->
+            gestureDetector.onTouchEvent(event)
+            false
+        }
+
         floatBinder?.show(view)
         floatBinder?.setClazz(builder.clazz)
+    }
+
+    /**
+     * 双击悬浮窗时调用，触发拍照
+     */
+    private fun takePhoto() {
+        // 这里仅发送一个广播或回调，实际拍照逻辑建议在Activity中实现
+        val intent = android.content.Intent("com.yy.floatserver.ACTION_TAKE_PHOTO")
+        builder.context?.sendBroadcast(intent)
+        // 你可以在MainActivity注册广播接收器，收到后启动相机并保存图片
+        Toast.makeText(builder.context, "正在启动拍照...", Toast.LENGTH_SHORT).show()
     }
 
 
