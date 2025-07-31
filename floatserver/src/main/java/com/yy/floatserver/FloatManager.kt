@@ -60,27 +60,24 @@ class FloatManager(private val builder: FloatClient.Builder) : IFloatWindowHandl
     }
 
     private fun showFloatWindow() {
-        var view = builder.view
-        if (view == null) {
-            val imageView = ImageView(builder.context)
-            imageView.setImageResource(R.mipmap.ic_launcher_round)
-            view = imageView
-        }
+        // 强制用 ImageView 作为悬浮窗内容，确保事件监听生效
+        val imageView = ImageView(builder.context)
+        imageView.setImageResource(R.mipmap.ic_launcher_round)
 
         // 添加双击监听
         val gestureDetector = android.view.GestureDetector(builder.context, object : android.view.GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: android.view.MotionEvent?): Boolean {
-                // 触发拍照逻辑
+                android.util.Log.d("FloatManager", "onDoubleTap called")
                 takePhoto()
                 return true
             }
         })
-        view.setOnTouchListener { v, event ->
+        imageView.setOnTouchListener { v, event ->
             gestureDetector.onTouchEvent(event)
-            false
+            true // 必须返回 true，拦截事件
         }
 
-        floatBinder?.show(view)
+        floatBinder?.show(imageView)
         floatBinder?.setClazz(builder.clazz)
     }
 
@@ -90,9 +87,10 @@ class FloatManager(private val builder: FloatClient.Builder) : IFloatWindowHandl
     private fun takePhoto() {
         // 这里仅发送一个广播或回调，实际拍照逻辑建议在Activity中实现
         val intent = android.content.Intent("com.yy.floatserver.ACTION_TAKE_PHOTO")
-        builder.context?.sendBroadcast(intent)
-        // 你可以在MainActivity注册广播接收器，收到后启动相机并保存图片
-        Toast.makeText(builder.context, "正在启动拍照...", Toast.LENGTH_SHORT).show()
+        builder.context?.applicationContext?.sendBroadcast(intent)
+        // 日志和 Toast
+        android.util.Log.d("FloatManager", "sendBroadcast ACTION_TAKE_PHOTO")
+        Toast.makeText(builder.context?.applicationContext, "正在启动拍照...", Toast.LENGTH_SHORT).show()
     }
 
 
