@@ -42,6 +42,21 @@ class MainActivity : AppCompatActivity() {
     private var photoUri: Uri? = null
     private var photoFile: File? = null
 
+    // Android 13+ 权限适配
+    private fun getRequiredPermissions(): Array<String> {
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.READ_MEDIA_IMAGES
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -94,9 +109,12 @@ class MainActivity : AppCompatActivity() {
     // 拍照广播接收器
     private val takePhotoReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_CODE_PERMISSIONS)
+            val permissions = getRequiredPermissions()
+            val needRequest = permissions.any {
+                ContextCompat.checkSelfPermission(this@MainActivity, it) != PackageManager.PERMISSION_GRANTED
+            }
+            if (needRequest) {
+                ActivityCompat.requestPermissions(this@MainActivity, permissions, REQUEST_CODE_PERMISSIONS)
             } else {
                 startCamera()
             }
@@ -128,7 +146,7 @@ class MainActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 startCamera()
             } else {
-                Toast.makeText(this, "需要相机和存储权限", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "需要相机和存储权限（或媒体图片权限）", Toast.LENGTH_SHORT).show()
             }
         }
     }
