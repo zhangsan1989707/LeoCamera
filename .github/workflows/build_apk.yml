@@ -69,11 +69,17 @@ jobs:
     - name: Cleanup Keystore
       run: rm -f temp.jks  # 防止密钥残留 [1](@ref)
 
-    # 10. 发布到 GitHub Releases
-    - name: Create Release
-      uses: ncipollo/release-action@v1
+    # # 10. 发布到 GitHub Releases
+    # - name: Create Release
+    #   uses: ncipollo/release-action@v1
+    #   with:
+    #     artifacts: '*.apk'
+    #     token: ${{ github.token }}
+    #     tag: ${{ github.ref_name }}
+    #     generateReleaseNotes: true
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
       with:
-        artifacts: '*.apk'
-        token: ${{ github.token }}
-        tag: ${{ github.ref_name }}
-        generateReleaseNotes: true
+        name: signed-app-release
+        path: app/build/outputs/apk/release/*.apk
+        retention-days: 1
